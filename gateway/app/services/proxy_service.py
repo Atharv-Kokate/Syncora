@@ -30,8 +30,12 @@ async def forward_request(request: Request, target_url: str, client: httpx.Async
     # Inject our correlation ID to the downstream service if it's somehow missing,
     # though our middleware currently handles generating it on the gateway side.
     if "x-correlation-id" not in {k.lower() for k in headers.keys()}:
-        headers["x-correlation-id"] = request.headers.get("X-Correlation-ID", "")
-            
+        headers["x-correlation-id"] = request.headers.get("X-Correlation-ID", "")        
+    # Inject user identity into downstream headers if auth was performed at the gateway
+    if hasattr(request.state, "user_payload") and request.state.user_payload:
+        user_id = request.state.user_payload.get("sub")
+        if user_id:
+            headers["x-user-id"] = str(user_id)            
     # 3. Read body asynchronously
     # (Since this is a standard REST gateway for now, we read the body into memory. 
     # For massive file uploads, we'd want to stream the request body as well).
