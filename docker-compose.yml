@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # -----------------------------------
+  # DATABASES
+  # -----------------------------------
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: syncora_user
+      POSTGRES_PASSWORD: syncora_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U syncora_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - syncora-net
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - syncora-net
+
+  # -----------------------------------
+  # MICROSERVICES
+  # -----------------------------------
+  auth-service:
+    build: ./auth-service
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://syncora_user:syncora_password@postgres:5432/syncora_auth
+      - JWT_SECRET=super-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - syncora-net
+    # Optional: Expose if you want to hit it directly bypassing gateway for testing
+    ports:
+      - "8001:8001"
+
+  docs-service:
+    build: ./docs-service
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://syncora_user:syncora_password@postgres:5432/syncora_docs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - syncora-net
+    ports:
+      - "8002:8002"
+
+  collaboration-service:
+    build: ./collaboration-service
+    environment:
+      - ENVIRONMENT=development
+      - REDIS_URL=redis://redis:6379/1
+      - DOCS_SERVICE_URL=http://docs-service:8002
+    depends_on:
+      redis:
+        condition: service_healthy
+      docs-service:
+        condition: service_started
+    networks:
+      - syncora-net
+    ports:
+      - "8003:8003"
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - DOCS_SERVICE_URL=http://docs-service:8002
+      - COLLAB_SERVICE_URL=http://collaboration-service:8003
+      - COLLAB_SERVICE_WS_URL=ws://collaboration-service:8003
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=super-secret-key-change-in-production
+    depends_on:
+      auth-service:
+        condition: service_started
+      docs-service:
+        condition: service_started
+      collaboration-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - syncora-net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  syncora-net:

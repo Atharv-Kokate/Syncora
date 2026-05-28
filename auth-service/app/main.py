@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.logger import setup_logger
 from app.core.database import engine
+from app.models.user import Base
 from app.routes import auth_routes
 
 setup_logger()
@@ -10,7 +11,10 @@ setup_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Perform startup operations
-    # In a prod environment, checking DB connection explicitly here is a good idea
+    # Auto-create tables for development without needing manual alembic runs
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
     yield
     # Graceful shutdown: cleanup database pool
     await engine.dispose()

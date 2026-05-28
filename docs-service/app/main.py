@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.logger import setup_logger
 from app.core.database import engine
+from app.models.document import Base
 from app.routes import document_routes
 
 setup_logger()
@@ -10,6 +11,10 @@ setup_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Perform startup operations
+    # Auto-create tables for development
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
     yield
     # Graceful shutdown: cleanup database pool
     await engine.dispose()

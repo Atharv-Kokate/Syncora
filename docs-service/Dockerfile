@@ -44,4 +44,5 @@ USER syncora
 
 EXPOSE ${PORT}
 
-CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 4 --proxy-headers
+# Start the server (Tables are auto-created in main.py lifespan for now)
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 4 --proxy-headers
