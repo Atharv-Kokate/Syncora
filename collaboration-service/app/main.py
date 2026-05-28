@@ -5,6 +5,7 @@ import structlog
 from contextlib import asynccontextmanager
 from app.core.redis_client import init_redis, close_redis
 from app.services.pubsub_manager import pubsub_manager
+from app.services.persistence_worker import persistence_worker
 from app.routes.ws_routes import router as ws_router
 import structlog
 
@@ -23,10 +24,14 @@ async def lifespan(app: FastAPI):
     # Start the Redis Pub/Sub listener background task
     await pubsub_manager.connect()
     
+    # Start the CRDT state persistence flusher
+    await persistence_worker.start()
+    
     yield
     
     # Shutdown: Clean up resources
     logger.info("collaboration_service_shutting_down")
+    await persistence_worker.stop()
     await pubsub_manager.disconnect()
     await close_redis()
 
