@@ -6,8 +6,10 @@ from app.core.config import settings
 from app.core.logger import setup_logger
 from app.middleware.request_id_middleware import RequestIDMiddleware
 from app.middleware.logging_middleware import LoggingMiddleware
-from app.middleware.rate_limit_middleware import setup_rate_limiting
+from app.core.rate_limit_middleware import setup_rate_limiting
 from app.routes import health_routes, auth_routes, docs_routes, collaboration_routes
+from app.services.ws_proxy import ws_proxy
+from fastapi import WebSocket, Query
 
 # 1. Initialize core dependencies (like structured logging)
 setup_logger()
@@ -55,7 +57,15 @@ app.add_middleware(RequestIDMiddleware)
 app.include_router(health_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(docs_routes.router)
-app.include_router(collaboration_routes.router)
 
+# 6. WebSocket Proxy Mount
+@app.websocket("/api/collab/ws/{document_id}")
+async def proxy_websocket(websocket: WebSocket, document_id: str, token: str = Query(None)):
+    """
+    Mounts a WebSocket proxy route dynamically.
+    Validates identity then tunnels directly to the Collaboration Service.
+    """
+    downstream_url = f"{settings.COLLAB_SERVICE_WS_URL}/ws/{document_id}"
+    await ws_proxy.proxy_ws(client_ws=websocket, downstream_ws_url=downstream_url, token=token)
 
 # To run locally: uvicorn app.main:app --reload --port 8000

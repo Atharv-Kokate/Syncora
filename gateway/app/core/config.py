@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     AUTH_SERVICE_URL: str = "http://localhost:8001"
     DOCS_SERVICE_URL: str = "http://localhost:8002"
     COLLAB_SERVICE_URL: str = "http://localhost:8003"
+    COLLAB_SERVICE_WS_URL: str = "ws://localhost:8003"
     
     # Security
     JWT_SECRET: str = "super-secret-key-change-in-production"

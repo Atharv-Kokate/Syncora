@@ -5,6 +5,8 @@ import structlog
 from contextlib import asynccontextmanager
 from app.core.redis_client import init_redis, close_redis
 from app.services.pubsub_manager import pubsub_manager
+from app.routes.ws_routes import router as ws_router
+import structlog
 
 # Initialize structured logging
 setup_logging()
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI):
     await close_redis()
 
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+app.include_router(ws_router)
 
 @app.get("/health")
 async def health_check():
