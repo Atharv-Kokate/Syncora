@@ -8,7 +8,7 @@ from typing import Dict, Any, Callable
 from urllib.parse import urlparse
 
 from app.core.config import get_settings
-from app.services.jwt_service import extract_user_from_token
+from app.core.security import verify_jwt_token
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -29,7 +29,10 @@ class WebSocketProxy:
         # 1. Validate JWT (must be passed in query params for WS)
         user_info = None
         if token:
-            user_info = extract_user_from_token(token)
+            try:
+                user_info = verify_jwt_token(token)
+            except Exception:
+                user_info = None
             
         if not user_info:
             await client_ws.close(code=1008, reason="Invalid or missing authentication token")

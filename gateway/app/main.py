@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logger import setup_logger
 from app.middleware.request_id_middleware import RequestIDMiddleware
 from app.middleware.logging_middleware import LoggingMiddleware
-from app.core.rate_limit_middleware import setup_rate_limiting
+from app.middleware.rate_limit_middleware import setup_rate_limiting
 from app.routes import health_routes, auth_routes, docs_routes, collaboration_routes
 from app.services.ws_proxy import ws_proxy
 from fastapi import WebSocket, Query
