@@ -97,24 +97,7 @@ const MenuBar = ({ editor, usersCount }: { editor: any, usersCount: number }) =>
           <Quote className="w-4 h-4" />
         </button>
         
-        <div className="w-px h-6 bg-slate-200 mx-1" />
         
-        <button 
-          onClick={() => editor.chain().focus().undo().run()} 
-          disabled={!editor.can().chain().focus().undo().run()} 
-          className={btnClass(false)} 
-          title="Undo"
-        >
-          <Undo className="w-4 h-4" />
-        </button>
-        <button 
-          onClick={() => editor.chain().focus().redo().run()} 
-          disabled={!editor.can().chain().focus().redo().run()} 
-          className={btnClass(false)} 
-          title="Redo"
-        >
-          <Redo className="w-4 h-4" />
-        </button>
       </div>
 
       <div className="flex items-center gap-2 text-sm text-slate-500 font-medium px-2">
@@ -175,22 +158,25 @@ export default function Tiptap({ documentId }: { documentId: string }) {
   }, [documentId, token]);
 
   const editor = useEditor({
-    extensions: ydoc && provider ? [
+    extensions: [
       StarterKit.configure({
         // Disable history because Collaboration handles it
         history: false,
       }),
-      Collaboration.configure({
-        document: ydoc,
-      }),
-      CollaborationCursor.configure({
-        provider: provider,
-        user: {
-          name: user?.email?.split('@')[0] || user?.username || 'Anonymous',
-          color: cursorColor,
-        },
-      }),
-    ] : [],
+      ...(ydoc && provider ? [
+        Collaboration.configure({
+          document: ydoc,
+        }),
+        CollaborationCursor.configure({
+          provider: provider,
+          user: {
+            name: user?.email?.split('@')[0] || user?.username || 'Anonymous',
+            color: cursorColor,
+          },
+        }),
+      ] : [])
+    ],
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: "focus:outline-none min-h-[500px] text-slate-800",

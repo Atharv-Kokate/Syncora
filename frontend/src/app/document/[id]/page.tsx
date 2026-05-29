@@ -24,6 +24,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 
   const [doc, setDoc] = useState<DocumentMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     const fetchDoc = async () => {
@@ -51,6 +52,16 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
       </div>
     );
   }
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -84,9 +95,16 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
             <span>Only you</span> {/* Will be dynamic with Collab Service */}
           </div>
           
-          <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-md transition-colors">
+          <button 
+            onClick={handleShare}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-md transition-all duration-300 ${
+              isCopied 
+                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
+                : 'text-slate-600 hover:bg-slate-100 border-slate-200'
+            }`}
+          >
             <Share className="w-4 h-4" />
-            <span className="hidden sm:inline">Share</span>
+            <span className="hidden sm:inline">{isCopied ? "Link Copied!" : "Share"}</span>
           </button>
         </div>
       </header>

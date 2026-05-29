@@ -23,5 +23,5 @@ async def proxy_docs_requests(
     Throws the payload into request.state so the proxy service can extract it.
     """
     request.state.user_payload = user_payload
-    target_url = f"{settings.DOCS_SERVICE_URL}/api/docs/{path}"
+    target_url = f"{settings.DOCS_SERVICE_URL}/{path}"
     return await forward_request(request, target_url, client)

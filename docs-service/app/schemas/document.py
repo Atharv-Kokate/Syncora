@@ -26,7 +26,7 @@ class DocumentResponse(BaseModel):
     """Payload returned to the client representing a Document."""
     id: uuid.UUID
     title: str
-    content: Dict[str, Any]
+    content: Optional[Dict[str, Any]] = None
     owner_id: uuid.UUID
     created_at: datetime
     updated_at: datetime

@@ -27,7 +27,14 @@ export default function RegisterPage() {
       // Route directly to login on success
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to create account. Please try again.");
+      let errorMessage = "Failed to create account. Please try again.";
+      const detail = err.response?.data?.detail;
+      if (typeof detail === "string") {
+        errorMessage = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0].msg) {
+        errorMessage = detail[0].msg;
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -57,7 +64,7 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition"
+                className="w-full text-slate-900 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition"
                 placeholder="you@example.com"
               />
             </div>
@@ -72,7 +79,7 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition"
+                className="w-full text-slate-900 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition"
                 placeholder="••••••••"
               />
             </div>
